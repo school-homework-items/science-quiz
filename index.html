@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Science Practice Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: a lab-notebook page. One centered column, faint graph-paper ground, ink-blue accent. */
+:root{
+  --paper:#f7f8fb; --sheet:#ffffff; --grid:#e6eaf2; --ink:#1b2333; --muted:#5d6779;
+  --line:#d5dbe6; --accent:#2747a0; --accent-soft:#e7ecfa; --artery:#b3263b;
+  --ok:#17803d; --ok-soft:#e5f5eb; --bad:#c2410c; --bad-soft:#fdeee6; --warn:#a16207;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11151d; --sheet:#181d27; --grid:#1d2330; --ink:#e7ebf3; --muted:#9aa4b6;
+    --line:#2c3443; --accent:#8fa8f0; --accent-soft:#222c46; --artery:#f07a8a;
+    --ok:#4ccf7d; --ok-soft:#173224; --bad:#ff8a57; --bad-soft:#3a2117; --warn:#e2b04a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11151d; --sheet:#181d27; --grid:#1d2330; --ink:#e7ebf3; --muted:#9aa4b6;
+  --line:#2c3443; --accent:#8fa8f0; --accent-soft:#222c46; --artery:#f07a8a;
+  --ok:#4ccf7d; --ok-soft:#173224; --bad:#ff8a57; --bad-soft:#3a2117; --warn:#e2b04a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink); font:17px/1.55 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:28px 64px;
+}
+.wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;font-weight:700}
+h3{font-size:17px;font-weight:700}
+a{color:var(--accent)}
+.eyebrow{font:700 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--artery)}
+.muted{color:var(--muted)}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:22px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.spread{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+button{font:inherit;cursor:pointer}
+.btn{border:1.5px solid var(--accent);background:var(--accent);color:var(--sheet);border-radius:8px;padding:10px 18px;font-weight:700}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.small{padding:6px 12px;font-size:15px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.lesson-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.lesson-list li{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.lesson-list a{text-decoration:none;font-weight:700}
+.count{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px;white-space:nowrap}
+
+/* quiz */
+.progress{height:8px;background:var(--grid);border-radius:99px;overflow:hidden}
+.progress>i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.qtopic{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px}
+.chip{display:inline-block;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px;text-decoration:none}
+.qtext{font:700 clamp(20px,3.2vw,24px)/1.35 var(--display);margin:14px 0 18px}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--sheet);color:var(--ink)}
+.choice:hover{border-color:var(--accent)}
+.choice .letter{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);font-weight:700;font-size:14px}
+.choice.sel{border-color:var(--accent);background:var(--accent-soft)}
+.choice.sel .letter{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
+.qnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:20px}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px}
+.map button{padding:6px 0;border:1px solid var(--line);border-radius:6px;background:var(--sheet);color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums}
+.map button.done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:700}
+.map button.cur{outline:2px solid var(--artery);outline-offset:1px}
+.notice{padding:12px 14px;border-radius:8px;background:var(--bad-soft);border:1px solid var(--bad);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+kbd{font:12px/1 ui-monospace,Menlo,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:2px 5px;background:var(--paper)}
+
+/* results */
+.score{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end}
+.big{font:800 56px/1 var(--display);font-variant-numeric:tabular-nums}
+.big small{font-size:24px;color:var(--muted);font-weight:700}
+.topics{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) 120px 72px;gap:12px;align-items:center;font-size:15px}
+.bar{height:10px;border-radius:99px;background:var(--grid);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px}
+.pct{font-variant-numeric:tabular-nums;text-align:right}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:var(--sheet);color:var(--ink);border-radius:99px;padding:5px 14px;font-size:15px}
+.tabs button.on{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.review{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.ritem{border:1px solid var(--line);border-left:5px solid var(--ok);border-radius:8px;padding:12px 14px;background:var(--sheet)}
+.ritem.wrong{border-left-color:var(--bad)}
+.ritem .rq{font-weight:700;margin:4px 0 6px}
+.ritem .ans{font-size:15px;display:flex;flex-direction:column;gap:2px}
+.ritem .why{font-size:15px;color:var(--muted);margin-top:6px}
+.tag-ok{color:var(--ok);font-weight:700}.tag-bad{color:var(--bad);font-weight:700}
+.next fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.next legend{font:700 13px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--sheet)}
+.opt:hover{border-color:var(--accent)}
+.opt input{margin-top:4px;accent-color:var(--accent);width:18px;height:18px;flex:none}
+.opt b{display:block}
+.opt span{font-size:15px;color:var(--muted)}
+.opt.dis{opacity:.5;cursor:not-allowed}
+.subset{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;margin:4px 0 0 30px}
+.subset label{display:flex;gap:8px;align-items:center;font-size:15px}
+.subset .low{color:var(--bad);font-weight:700;font-size:13px}
+.hist{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+.hist td,.hist th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.hist th{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.banner{padding:14px 16px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent)}
+.banner.win{background:var(--ok-soft);border-color:var(--ok)}
+.sr{position:absolute;left:-9999px}
+#print{display:none}
+@media (max-width:520px){.trow{grid-template-columns:minmax(0,1fr) 70px 64px}.sheet{padding:16px}.big{font-size:44px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* printing: only the notebook sheet */
+@page{margin:0.6in}
+@media print{
+  body{background:#fff;color:#000;padding:0;font-size:12pt}
+  #app{display:none!important}
+  #print{display:block!important}
+  .p-head{border-bottom:2px solid #000;padding-bottom:6pt;margin-bottom:10pt}
+  .p-head h1{font-size:18pt}
+  .p-item{break-inside:avoid;border-bottom:1px solid #999;padding:8pt 0}
+  .p-item .pq{font-weight:700}
+  .p-item div{margin-top:3pt}
+  .p-lbl{font-weight:700;text-transform:uppercase;font-size:9pt;letter-spacing:.05em}
+  a{color:#000;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div id="app" class="wrap" aria-live="polite"></div>
+<div id="print"></div>
+<script>
+const QUIZ = {"title": "Cells & the Cardiovascular System", "subtitle": "7th grade science · open-book practice", "topics": [{"id": "micro", "name": "Microscopes", "url": "https://flexbooks.ck12.org/cbook/ck-12-middle-school-life-science-2.0/section/1.6/primary/lesson/microscopes-ms-ls/"}, {"id": "cells", "name": "Cell Theory", "url": "https://flexbooks.ck12.org/cbook/ck-12-middle-school-life-science-2.0/section/2.3/primary/lesson/cell-biology-ms-ls/"}, {"id": "prok", "name": "Prokaryotic & Eukaryotic Cells", "url": "https://flexbooks.ck12.org/cbook/ck-12-middle-school-life-science-2.0/section/2.4/primary/lesson/prokaryotic-and-eukaryotic-cells-ms-ls/"}, {"id": "virus", "name": "Viruses", "url": "https://flexbooks.ck12.org/cbook/ck-12-middle-school-life-science-2.0/section/5.1/primary/lesson/viruses-ms-ls/"}, {"id": "body", "name": "Organization of the Human Body", "url": "https://flexbooks.ck12.org/cbook/ck-12-middle-school-life-science-2.0/section/11.1/primary/lesson/organization-of-the-human-body-ms-ls/"}, {"id": "cardio", "name": "Cardiovascular System", "url": "https://flexbooks.ck12.org/cbook/ck-12-middle-school-life-science-2.0/section/11.21/primary/lesson/cardiovascular-system-ms-ls/"}, {"id": "heart", "name": "The Heart", "url": "https://flexbooks.ck12.org/cbook/ck-12-middle-school-life-science-2.0/section/11.23/primary/lesson/heart-ms-ls/"}, {"id": "vessels", "name": "Blood Vessels", "url": "https://flexbooks.ck12.org/cbook/ck-12-middle-school-life-science-2.0/section/11.24/primary/lesson/blood-vessels-ms-ls/"}, {"id": "bp", "name": "Blood Pressure", "url": "https://flexbooks.ck12.org/cbook/ck-12-middle-school-life-science-2.0/section/11.25/primary/lesson/blood-pressure-ms-ls/"}], "concepts": [{"id": "m1", "t": "micro", "name": "What a microscope does", "note": "Microscope = a tool that makes things too small to see with the eye look bigger. Microscopy = the study of small objects using microscopes.", "qs": [["What is a microscope?", "A tool that makes things too small to see with the eye look bigger", ["A tool that measures how much tiny objects weigh", "A tool that uses heat to break cells apart", "A tool that keeps specimens alive for study"], "A microscope magnifies objects that are too small for the naked eye."], ["What does the word \"microscopy\" mean?", "The study of small objects using microscopes", ["The process of making glass lenses", "The study of bacteria only", "Coloring cells so they are easier to see"], "Microscopy is the study of small objects using microscopes."], ["Before microscopes, what were the smallest things you could see on your own fingertips?", "The tiny lines in your skin", ["Individual skin cells", "Bacteria living on the skin", "The nucleus of each cell"], "The lesson says that before microscopes, the tiny lines in your skin were the smallest things you could see."]]}, {"id": "m2", "t": "micro", "name": "The Janssens and the first microscope", "note": "Zacharias Janssen and his son Hans (Dutch spectacle makers, about 1595) put lenses in a tube, which was the forerunner of the compound microscope and the telescope.", "qs": [["Who experimented with lenses in a tube and made the forerunner of the compound microscope?", "Zacharias and Hans Janssen", ["Robert Hooke", "Antonie van Leeuwenhoek", "Rudolf Virchow"], "Two Dutch spectacle makers, Zacharias Janssen and his son Hans, found that lenses in a tube made nearby objects look magnified."], ["What was the job of Zacharias Janssen and his son Hans?", "Dutch spectacle (eyeglass) makers", ["English natural scientists", "German doctors", "Dutch cloth merchants"], "They were Dutch spectacle makers. (Van Leeuwenhoek was the cloth merchant.)"], ["According to the lesson, in what year were microscopes invented?", "1595", ["1665", "1858", "1950"], "The lesson says microscopes were invented in 1595. Hooke looked at cork in 1665."]]}, {"id": "m3", "t": "micro", "name": "Robert Hooke discovers cells", "note": "Robert Hooke (English scientist, 1665) looked at a piece of cork and named the tiny structures he saw \"cells.\"", "qs": [["What did Robert Hooke look at when he first saw and named cells?", "A piece of cork", ["Scum from his teeth", "An onion skin", "A drop of pond water"], "In 1665 Hooke looked at cork, which is made from tree bark, and called the tiny structures cells."], ["In what year did Robert Hooke first observe cells?", "1665", ["1595", "1858", "1950"], "Hooke observed cork cells in 1665."], ["Why was Robert Hooke's discovery so important?", "It led to the theory that all living things are made of cells", ["It proved that viruses are alive", "It showed that bacteria cause disease", "It created the first electron microscope"], "Hooke's discovery of cells eventually led to the cell theory."]]}, {"id": "m4", "t": "micro", "name": "Van Leeuwenhoek, father of microscopy", "note": "Antonie van Leeuwenhoek (\"father of microscopy,\" Dutch cloth merchant) made his own microscope. He discovered bacteria (in scum from his teeth), one-celled protists, and sperm cells.", "qs": [["Who is called the \"father of microscopy\"?", "Antonie van Leeuwenhoek", ["Robert Hooke", "Zacharias Janssen", "Rudolf Virchow"], "Antonie van Leeuwenhoek taught himself to make one of the first microscopes and is called the father of microscopy."], ["What did van Leeuwenhoek discover when he looked at scum from his own teeth?", "Bacteria", ["Viruses", "Cork cells", "Red blood cells"], "He discovered bacteria, the smallest living organisms on the planet, in scum from his teeth."], ["Besides bacteria, what else did van Leeuwenhoek discover with his microscope?", "One-celled protists and sperm cells", ["Viruses and DNA", "Atoms and electrons", "The nucleus and ribosomes"], "Using microscopes, van Leeuwenhoek also discovered one-celled protists and sperm cells."]]}, {"id": "m5", "t": "micro", "name": "Light microscopes", "note": "Light microscope: glass or plastic lenses focus light. It magnifies up to 2,000 times and is the type most schools use.", "qs": [["Which type of microscope is used in most schools and labs?", "Light microscope", ["Transmission electron microscope", "Scanning electron microscope", "Scanning acoustic microscope"], "Most of the microscopes used in schools and laboratories are light microscopes."], ["About how much bigger can the most powerful light microscopes make an image?", "Up to 2,000 times", ["Up to 20 times", "Up to 2 million times", "Up to 500,000 times"], "The most powerful light microscopes can make images up to 2,000 times larger."], ["How does a light microscope work?", "Lenses made of glass or plastic focus light", ["It slides a beam of electrons across a surface", "It scans the specimen with sound waves", "It shoots electrons through the specimen"], "Light microscopes use lenses, usually glass or plastic, to focus light into the eye or a camera."]]}, {"id": "m6", "t": "micro", "name": "Transmission electron microscope (TEM)", "note": "TEM (transmission electron microscope): focuses a beam of electrons THROUGH the object. It magnifies up to 2 million times with a very clear image.", "qs": [["Which microscope focuses a beam of electrons THROUGH an object?", "Transmission electron microscope (TEM)", ["Scanning electron microscope (SEM)", "Light microscope", "Scanning acoustic microscope"], "A TEM focuses a beam of electrons through an object."], ["What does TEM stand for?", "Transmission electron microscope", ["Thermal energy microscope", "Total enlargement microscope", "Tiny element magnifier"], "TEM stands for transmission electron microscope."], ["Which microscope in the lesson can magnify the most, up to 2 million times?", "Transmission electron microscope (TEM)", ["Scanning electron microscope (SEM)", "Light microscope", "Scanning acoustic microscope"], "A TEM can make an image up to two million times bigger. SEM reaches about 500,000 times and light reaches about 2,000 times."]]}, {"id": "m7", "t": "micro", "name": "Scanning electron microscope (SEM)", "note": "SEM (scanning electron microscope): slides a beam of electrons ACROSS the surface to show shape and surface texture. It magnifies about 10 to 500,000 times.", "qs": [["Which microscope would be best for seeing the surface shape and texture of a bedbug?", "Scanning electron microscope (SEM)", ["Transmission electron microscope (TEM)", "Light microscope", "Scanning acoustic microscope"], "An SEM shows the shape and surface texture of extremely small objects, such as a paperclip, a bedbug, or even an atom."], ["How does a scanning electron microscope make an image?", "It slides a beam of electrons across the surface of the specimen", ["It passes light through glass lenses", "It sends electrons through the inside of the specimen", "It bounces sound waves off the specimen"], "An SEM slides electrons across the surface and makes a detailed map of it."], ["What is the magnification range of a scanning electron microscope?", "About 10 to 500,000 times", ["Up to 2,000 times", "Up to 2 million times", "About 1 to 100 times"], "SEM magnification can be controlled from about 10 to 500,000 times."]]}, {"id": "m8", "t": "micro", "name": "Scanning acoustic microscope and the four types", "note": "Scanning acoustic microscope: uses sound waves; useful in biology and medical research. The 4 types are light, TEM, SEM, and scanning acoustic.", "qs": [["Which microscope uses sound waves to scan a specimen?", "Scanning acoustic microscope", ["Scanning electron microscope", "Transmission electron microscope", "Light microscope"], "Acoustic means sound. Scanning acoustic microscopes use sound waves."], ["A scanning acoustic microscope scans a specimen using...", "Sound waves", ["Light", "Electrons", "Magnets"], "Scanning acoustic microscopes use sound waves and are useful in biology and medical research."], ["Which list names the four types of microscopes in the lesson?", "Light, TEM, SEM, scanning acoustic", ["Light, X-ray, laser, TEM", "Compound, telescope, SEM, sonar", "Light, magnifying glass, hand lens, TEM"], "Researchers use light microscopes, transmission electron microscopes, scanning electron microscopes, and scanning acoustic microscopes."]]}, {"id": "c1", "t": "cells", "name": "What a cell is", "note": "Cell = the smallest structural and functional unit of an organism. Bacteria have 1 cell; humans have trillions.", "qs": [["What is a cell?", "The smallest structural and functional unit of an organism", ["A group of tissues that work together", "The largest part of an organ", "A type of virus"], "A cell is the smallest structural and functional unit of an organism."], ["About how many cells make up a human body?", "Trillions", ["About one hundred", "A few thousand", "Just one"], "Big organisms like humans have trillions of cells. Some organisms, like bacteria, have only one."], ["If you compare human cells and banana cells up close, what would you find?", "They are actually very similar", ["They have nothing in common", "Banana cells are millions of times bigger", "Bananas are not made of cells"], "Humans and bananas look very different on the outside, but their cells are actually very similar."]]}, {"id": "c2", "t": "cells", "name": "Light vs. electron microscopes for cells", "note": "A light microscope sends a beam of light through the specimen. An electron microscope (1950s) sends a beam of electrons, so we can see the tiny parts INSIDE cells.", "qs": [["What type of microscope is best for studying the tiny structures inside cells?", "Electron microscope", ["Light microscope", "Magnifying glass", "Telescope"], "Many structures inside cells are too small for a light microscope. An electron microscope shows them."], ["A light microscope sends ___ through a specimen. An electron microscope sends ___.", "A beam of light; a beam of electrons", ["Sound waves; a beam of light", "A beam of electrons; a beam of light", "Heat; sound waves"], "A light microscope uses light and an electron microscope uses electrons."], ["When did scientists develop the more powerful electron microscopes?", "The 1950s", ["1595", "1665", "1858"], "In the 1950s, scientists developed electron microscopes."]]}, {"id": "c3", "t": "cells", "name": "Virchow: cells come from cells", "note": "Rudolf Virchow (1858) said cells only come from other cells. For example, bacteria grow and then divide in half.", "qs": [["Who said in 1858 that cells only come from other cells?", "Rudolf Virchow", ["Robert Hooke", "Antonie van Leeuwenhoek", "Zacharias Janssen"], "In 1858 Rudolf Virchow developed the hypothesis that cells only come from other cells."], ["How do bacteria make new bacteria?", "They grow, then divide in half", ["They form from nonliving matter", "Viruses build them", "Two dead cells join together"], "Bacteria divide in half after they grow some, which shows that cells come from other cells."], ["According to cell theory, could you make a cell by mixing molecules together in a lab?", "No, because all cells come from other cells", ["Yes, if you use the right molecules", "Yes, but only bacteria cells", "No, because cells are not alive"], "Cell theory says all cells come from cells that existed before."]]}, {"id": "c4", "t": "cells", "name": "The three parts of cell theory", "note": "Cell theory: (1) All organisms are made of cells. (2) Cells are alive and are the basic living units of all organisms. (3) All cells come from other cells.", "qs": [["Which statement is NOT part of cell theory?", "Cells can form from nonliving material", ["All organisms are composed of cells", "Cells are the basic living units of organization", "All cells come from other cells"], "Cell theory says all cells come from other cells, so they cannot form from nonliving material."], ["Which statement IS part of cell theory?", "All organisms are composed of cells", ["All cells have a nucleus", "All cells are the same shape", "Viruses are the smallest cells"], "The first part of cell theory: all organisms are composed of cells."], ["How much evidence has been found that goes against cell theory?", "None", ["A lot, so it is being replaced", "Only evidence from viruses", "About half of all experiments"], "Since cell theory was developed, no evidence has ever been found to contradict it."]]}, {"id": "c5", "t": "cells", "name": "Specialized cells", "note": "A cell's shape fits its job. Red blood cells are flat discs (move through vessels, carry oxygen). Nerve cells are long and stringy (send signals). Skin cells are flat and tightly packed (protect).", "qs": [["Why are red blood cells shaped like flat discs?", "To move easily through blood vessels and deliver oxygen", ["To send signals to the brain", "To fit tightly together and protect the body", "To store the body's DNA"], "Their flat disc shape lets red blood cells move quickly through blood vessels and deliver oxygen."], ["Why are nerve cells long and stringy?", "To form a line of communication and send signals quickly", ["To carry oxygen through the blood", "To fit tightly together like tiles", "To fight germs"], "Nerve cells work like a wire. Their long shape lets them quickly send signals, like touching a hot stove, to your brain."], ["Skin cells are flat and fit tightly together so they can...", "Protect the body", ["Move quickly through blood vessels", "Send signals to the brain", "Make proteins"], "Skin cells are flat and fit tightly together to protect your body."]]}, {"id": "c6", "t": "cells", "name": "Levels of organization", "note": "Levels of organization: cell → tissue → organ → organ system → organism. Organelles are inside cells.", "qs": [["Which list goes from smallest to largest?", "Cell → tissue → organ → organ system → organism", ["Tissue → cell → organ → organism → organ system", "Cell → organ → tissue → organ system → organism", "Organ → tissue → cell → organ system → organism"], "Cells form tissues, tissues form organs, organs form organ systems, and organ systems form the organism."], ["Liver cells are organized into liver tissue. Liver tissue is organized into...", "The liver, an organ", ["An organelle", "A single cell", "An atom"], "Liver tissue is organized into an organ, the liver."], ["Where are organelles found?", "Inside a cell", ["Between cells in a tissue", "Only inside organs", "Floating in the blood"], "Organelles are inside a cell, and organs are inside an organism."]]}, {"id": "p1", "t": "prok", "name": "The nucleus: the main difference", "note": "Eukaryotic cells HAVE a nucleus, which stores DNA inside a membrane. Prokaryotic cells have NO nucleus; their DNA is one large coiled circle in the main part of the cell.", "qs": [["What is the main difference between eukaryotic and prokaryotic cells?", "Eukaryotic cells have a nucleus; prokaryotic cells do not", ["Prokaryotic cells have a nucleus; eukaryotic cells do not", "Only eukaryotic cells have DNA", "Only prokaryotic cells have a cell membrane"], "The main difference is that eukaryotic cells have a nucleus."], ["Where is the DNA in a prokaryotic cell?", "Floating in the main part of the cell, not in a nucleus", ["Inside a nucleus", "Inside the mitochondria", "Outside the cell membrane"], "Prokaryotic cells have no nucleus, so their DNA is in the main part of the cell."], ["In a prokaryotic cell, the DNA forms...", "A single large circle that coils up on itself", ["Many chromosomes protected in a nucleus", "A protein coat around the cell", "Tiny pieces stored in the ribosomes"], "Prokaryotic DNA is a single large circle that coils up on itself. Eukaryotic cells usually have multiple chromosomes in a nucleus."]]}, {"id": "p2", "t": "prok", "name": "Which organisms are prokaryotes or eukaryotes", "note": "Prokaryotes are ONLY Bacteria and Archaea, and all are single-celled. Eukaryotes are animals, plants, fungi, and protists. All multicellular organisms are eukaryotes.", "qs": [["Which organisms are the only prokaryotes?", "Bacteria and Archaea", ["Plants and animals", "Fungi and protists", "Viruses and bacteria"], "Bacteria and Archaea are the only prokaryotes."], ["Which prokaryotes are multicellular?", "None of them", ["Archaea", "Bacteria", "Some protists"], "All prokaryotes are single-celled. All multicellular organisms are eukaryotes."], ["A mushroom is a fungus. What type of cells does it have?", "Eukaryotic cells", ["Prokaryotic cells", "No cells at all", "Viral cells"], "Animals, plants, fungi, and protists are all eukaryotes."]]}, {"id": "p3", "t": "prok", "name": "What ALL cells have", "note": "ALL cells have a plasma (cell) membrane, ribosomes, cytoplasm, and DNA. Cytoplasm = everything inside the cell membrane except the nucleus.", "qs": [["Which four things do ALL cells have?", "Plasma membrane, ribosomes, cytoplasm, and DNA", ["Nucleus, mitochondria, ribosomes, and DNA", "Cell wall, nucleus, cytoplasm, and Golgi apparatus", "Plasma membrane, nucleus, chloroplasts, and DNA"], "Both prokaryotic and eukaryotic cells have a plasma membrane, ribosomes, cytoplasm, and DNA."], ["Which structure is found in BOTH prokaryotic and eukaryotic cells?", "Ribosomes", ["Nucleus", "Mitochondria", "Golgi apparatus"], "All cells have ribosomes. The nucleus, mitochondria, and Golgi apparatus are found only in eukaryotic cells."], ["What is the cytoplasm?", "All the contents inside the cell membrane, not including the nucleus", ["The layer that surrounds and protects the cell", "The place where DNA is stored", "A membrane-bound organelle"], "The cytoplasm is all the contents of the cell inside the cell membrane, not including the nucleus."]]}, {"id": "p4", "t": "prok", "name": "Plasma membrane and ribosomes", "note": "Plasma (cell) membrane = phospholipid layer that surrounds the cell and protects it. Ribosomes = organelles without a membrane where proteins are made (protein synthesis).", "qs": [["What does the plasma membrane do?", "Surrounds the cell and protects it from the outside environment", ["Makes proteins for the cell", "Stores the cell's DNA", "Pumps blood around the cell"], "The plasma membrane, or cell membrane, is the phospholipid layer that surrounds the cell and protects it."], ["What are ribosomes?", "Organelles without a membrane where proteins are made", ["Membrane bags that store DNA", "The outer layer of the cell", "The liquid inside the nucleus"], "Ribosomes are non-membrane bound organelles where proteins are made."], ["Making proteins is called protein synthesis. Where in the cell does it happen?", "Ribosomes", ["Nucleus", "Plasma membrane", "Golgi apparatus"], "Ribosomes are where proteins are made, a process called protein synthesis."]]}, {"id": "p5", "t": "prok", "name": "Organelles", "note": "Organelles = membrane-bound structures in eukaryotic cells (for example mitochondria, endoplasmic reticulum, Golgi apparatus). They let eukaryotic cells be more specialized. Prokaryotic cells are smaller and simpler, with no membrane-bound organelles.", "qs": [["What are organelles?", "Membrane-bound structures inside eukaryotic cells", ["Tiny prokaryotes living inside cells", "Groups of tissues", "Another name for DNA"], "Organelles are membrane-bound structures such as mitochondria, the endoplasmic reticulum, and the Golgi apparatus."], ["Which type of cell has membrane-bound organelles like mitochondria?", "Eukaryotic cells only", ["Prokaryotic cells only", "Both prokaryotic and eukaryotic cells", "Neither type"], "Prokaryotic cells do not have a nucleus or other membrane-bound organelles."], ["Why can eukaryotic cells be more specialized than prokaryotic cells?", "Their organelles give them more functions", ["They have no DNA", "They are smaller and simpler", "They are always single-celled"], "Organelles allow eukaryotic cells to be more specialized. Prokaryotic cells are usually smaller and simpler."]]}, {"id": "v1", "t": "virus", "name": "What a virus is made of", "note": "Virus = DNA or RNA surrounded by a coat of protein. Viruses are so tiny that only a very powerful microscope can show them.", "qs": [["What is a virus made of?", "DNA or RNA surrounded by a coat of protein", ["One cell with a nucleus", "A cell membrane filled with cytoplasm", "Ribosomes and mitochondria"], "A virus is essentially DNA or RNA surrounded by a coat of protein."], ["What surrounds the genetic material of a virus?", "A coat of protein", ["A cell wall", "A plasma membrane", "A nucleus"], "A virus's DNA or RNA is surrounded by a protein coat."], ["How can scientists see viruses?", "Only with a very powerful microscope", ["With the naked eye", "With a magnifying glass", "With any classroom light microscope"], "Viruses are so tiny that they can only be seen with a very powerful microscope."]]}, {"id": "v2", "t": "virus", "name": "Why viruses are not alive", "note": "Viruses are NOT living. They are not made of cells, cannot keep homeostasis (a stable internal environment), and cannot reproduce on their own. They are not in any of the 3 domains.", "qs": [["Why are viruses NOT considered living things?", "They are not made of cells and cannot reproduce on their own", ["They have no genetic material", "They can never change or evolve", "They are too large to be cells"], "Viruses are not made of cells and need a host cell to reproduce."], ["Which domain of life do viruses belong to?", "None of the three domains", ["Bacteria", "Archaea", "Eukarya"], "Viruses are very different from organisms in the three domains, so they do not belong to any of them."], ["Viruses cannot maintain a stable internal environment. What is a stable internal environment called?", "Homeostasis", ["Replication", "Mutation", "Respiration"], "A virus cannot maintain homeostasis, which is one reason it is not considered alive."]]}, {"id": "v3", "t": "virus", "name": "How viruses are like living things", "note": "Like living things, viruses have genetic material and can evolve: their genetic material can mutate, which changes their traits. This is why classifying viruses has been controversial.", "qs": [["Which two traits do viruses share with living things?", "They have genetic material and they can evolve", ["They are made of cells and they grow", "They keep homeostasis and they eat", "They have ribosomes and cytoplasm"], "Viruses have genetic material like all cells do, and they can evolve."], ["When a virus's genetic material changes and alters its traits, this is called a...", "Mutation", ["Replication", "Infection", "Homeostasis"], "A virus's genetic material can change (mutate), which alters its traits."], ["Why has the classification of viruses been controversial?", "They have genetic material and evolve like life, but are not made of cells", ["They are bigger than most bacteria", "They only infect plants", "They have a nucleus but no DNA"], "Viruses share some traits with life but are not cells, which calls the definition of life into question."]]}, {"id": "v4", "t": "virus", "name": "How viruses reproduce", "note": "A virus injects its DNA or RNA into a host cell. The host cell's ATP (energy), ribosomes, and enzymes make copies of the virus. Viruses infect plants, animals, and bacteria.", "qs": [["How does a virus reproduce?", "It injects its genetic material into a host cell, and the host cell makes new viruses", ["It grows and divides in half", "It makes its own ATP and copies itself", "It splits its protein coat into two"], "Viruses cannot reproduce on their own. They use a host cell to make more viruses."], ["Which parts of the host cell does a virus use to copy itself?", "The host's ATP (energy), ribosomes, and enzymes", ["Only its own ribosomes", "Its own nucleus", "No cell parts at all"], "Inside the host cell, the virus uses the cell's ATP, ribosomes, enzymes, and other parts to make copies."], ["Which organisms can viruses infect?", "Plants, animals, and bacteria", ["Only humans", "Only animals", "Only bacteria"], "Viruses infect a variety of organisms, including plants, animals, and bacteria."]]}, {"id": "v5", "t": "virus", "name": "Viruses and human disease", "note": "Diseases caused by viruses: flu, the common cold, rabies, diarrheal diseases, AIDS, and cold sores (a herpes virus). They range from mild to fatal.", "qs": [["Which of these is caused by a virus?", "The common cold", ["High blood pressure", "A broken bone", "A sunburn"], "The flu and the common cold are caused by viruses."], ["What causes cold sores?", "A herpes virus", ["Bacteria", "High blood pressure", "Too much sunlight"], "Cold sores are caused by a herpes virus."], ["Which list has ONLY diseases caused by viruses?", "Flu, rabies, AIDS, cold sores", ["Flu, hypertension, rabies, AIDS", "Common cold, stroke, AIDS, flu", "Rabies, broken bone, flu, cold sores"], "Viruses cause the flu, the common cold, rabies, diarrheal diseases, AIDS, and cold sores. Hypertension, strokes, and broken bones are not caused by viruses."]]}, {"id": "b1", "t": "body", "name": "Tissues, organs, and organ systems", "note": "Tissue = a group of similar cells working together. Organ = 2 or more tissues working together. Organ system = organs working together (for example, heart + blood + blood vessels = cardiovascular system).", "qs": [["A group of similar cells that work together is called a...", "Tissue", ["Organ", "Organ system", "Organelle"], "A group of cells that work together forms a tissue."], ["What is an organ?", "A structure made of two or more tissues that work together", ["A group of identical cells", "A single large cell", "A group of organ systems"], "An organ is a structure made of two or more tissues that work together."], ["The heart, blood, and blood vessels together form...", "An organ system, the cardiovascular system", ["A single tissue", "A single organ", "One large cell"], "Organs that work together form an organ system. The heart, blood, and blood vessels form the cardiovascular system."]]}, {"id": "b2", "t": "body", "name": "The four tissue types", "note": "The 4 main tissue types are epithelial, connective, muscle, and nervous. The heart contains all four.", "qs": [["Which list names the four main types of tissue in the body?", "Epithelial, connective, muscle, nervous", ["Skin, blood, bone, brain", "Cardiac, smooth, skeletal, nervous", "Epithelial, cardiac, lymph, bone"], "Your body has four main types of tissue: epithelial, connective, muscle, and nervous."], ["How many of the four tissue types are found in the heart?", "All four", ["Only one", "Two", "Three"], "All four tissue types work together in the heart, as they do in other organs."], ["Which of these is NOT one of the four main tissue types?", "Cardiovascular", ["Epithelial", "Connective", "Nervous"], "Cardiovascular is an organ system, not a tissue type."]]}, {"id": "b3", "t": "body", "name": "Epithelial tissue", "note": "Epithelial tissue = layers of tightly packed cells that line the surfaces of the body. Examples: skin, the lining of the mouth and nose, and the lining of the digestive system.", "qs": [["Which tissue is made of tightly packed layers of cells that line the surfaces of the body?", "Epithelial tissue", ["Connective tissue", "Muscle tissue", "Nervous tissue"], "Epithelial tissue is made of layers of tightly packed cells that line body surfaces."], ["Which is an example of epithelial tissue?", "The lining of the mouth", ["Bone", "Tendon", "The spinal cord"], "Examples of epithelial tissue include the skin, the lining of the mouth and nose, and the lining of the digestive system."], ["Skin is an example of which type of tissue?", "Epithelial", ["Connective", "Muscle", "Nervous"], "Skin is epithelial tissue because it lines the surface of the body."]]}, {"id": "b4", "t": "body", "name": "Connective tissue", "note": "Connective tissue = many types of cells that support and bind other tissues. Examples: tendon, cartilage, and bone. Blood is a specialized connective tissue.", "qs": [["Which of these is classified as a specialized connective tissue?", "Blood", ["Skin", "The brain", "The lining of the nose"], "Blood is classified as a specialized connective tissue."], ["Which are two examples of connective tissue?", "Bone and cartilage", ["Skin and the lining of the mouth", "The brain and nerves", "The spinal cord and skin"], "Connective tissue includes tendon, cartilage, and bone."], ["What is the job of connective tissue?", "To support and bind other tissues of the body", ["To contract and allow movement", "To sense stimuli and send signals", "To line the surfaces of the body"], "Connective tissue cells are all involved in supporting and binding other tissues."]]}, {"id": "b5", "t": "body", "name": "Muscle and nervous tissue", "note": "Muscle tissue = bands of cells that contract and allow movement. Nervous tissue = nerve cells that sense stimuli and send signals; found in nerves, the spinal cord, and the brain.", "qs": [["Which tissue is made of bands of cells that contract and allow movement?", "Muscle tissue", ["Nervous tissue", "Epithelial tissue", "Connective tissue"], "Muscle tissue is made of bands of cells that contract and allow movement."], ["What does nervous tissue do?", "Senses stimuli and transmits signals", ["Contracts to allow movement", "Supports and binds other tissues", "Lines the surfaces of the body"], "Nervous tissue is made of nerve cells that sense stimuli and transmit signals."], ["Where is nervous tissue found?", "In nerves, the spinal cord, and the brain", ["In bones and tendons", "Only in the skin", "In the lining of the stomach"], "Nervous tissue is found in nerves, the spinal cord, and the brain."]]}, {"id": "b6", "t": "body", "name": "Organ systems, part 1", "note": "Urinary (kidneys, bladder): removes extra water, salts, and wastes from blood. Endocrine (pituitary, adrenal glands): makes hormones. Integumentary (skin, hair, nails): protection, prevents water loss, temperature control. Skeletal (bones, cartilage, ligaments): support, protection, makes blood cells, stores minerals.", "qs": [["Which organ system includes the kidneys and bladder and removes extra water, salts, and wastes from the blood?", "Urinary system", ["Digestive system", "Lymphatic system", "Endocrine system"], "The urinary system (kidneys, urinary bladder) removes extra water, salts, and waste products from the blood."], ["Which organ system produces hormones, using glands like the pituitary and adrenal glands?", "Endocrine system", ["Nervous system", "Integumentary system", "Immune system"], "The endocrine system produces hormones that communicate between cells."], ["Skin, hair, and nails belong to which organ system?", "Integumentary system", ["Skeletal system", "Muscular system", "Immune system"], "The integumentary system (skin, hair, nails) protects from injury and water loss and helps control temperature."]]}, {"id": "b7", "t": "body", "name": "Organ systems, part 2", "note": "Respiratory (trachea, larynx, pharynx, lungs): gas exchange. Nervous (brain, spinal cord, nerves): collects and processes information. Digestive (esophagus, stomach, intestines): digests food and absorbs nutrients. Immune (bone marrow, spleen, white blood cells): defends against disease. Skeletal: also produces blood cells.", "qs": [["The trachea, larynx, pharynx, and lungs belong to which organ system?", "Respiratory system", ["Digestive system", "Cardiovascular system", "Lymphatic system"], "The respiratory system brings air to where gas exchange happens."], ["Which organ system collects, transfers, and processes information?", "Nervous system", ["Endocrine system", "Immune system", "Muscular system"], "The nervous system (brain, spinal cord, nerves) collects, transfers, and processes information."], ["Which organ system supports and protects soft tissues, produces blood cells, and stores minerals?", "Skeletal system", ["Muscular system", "Cardiovascular system", "Immune system"], "The skeletal system (bones, cartilage, ligaments) supports the body, produces blood cells, and stores minerals."]]}, {"id": "b8", "t": "body", "name": "Organ systems work together", "note": "The body has 12 organ systems, and they must work together. For example, the cardiovascular and respiratory systems work together to bring cells oxygen and remove carbon dioxide.", "qs": [["Which two organ systems work together to bring oxygen to cells and remove carbon dioxide?", "Cardiovascular and respiratory", ["Digestive and skeletal", "Integumentary and urinary", "Muscular and endocrine"], "The cardiovascular and respiratory systems work together to provide oxygen and remove carbon dioxide."], ["According to the lesson, how many organ systems does the human body have?", "12", ["4", "8", "20"], "The lesson's table shows the body's 12 organ systems."], ["Which statement about organ systems is true?", "They must all be able to work together", ["Each one works alone", "Only the cardiovascular system is needed", "Each organ system is a single type of cell"], "Your organ systems do not work alone. They must all work together."]]}, {"id": "cv1", "t": "cardio", "name": "Parts of the cardiovascular system", "note": "Cardiovascular system = the heart + the blood vessels + the blood.", "qs": [["What three things make up the cardiovascular system?", "The heart, the blood vessels, and the blood", ["The heart, the lungs, and the trachea", "The brain, the nerves, and the spinal cord", "The kidneys, the bladder, and the blood"], "The cardiovascular system is made up of the heart, the blood vessels, and the blood."], ["Which of these is NOT part of the cardiovascular system?", "The lungs", ["The heart", "Arteries", "Blood"], "The lungs belong to the respiratory system, which works closely with the cardiovascular system."], ["Which organ is one of the main organs of the cardiovascular system?", "The heart", ["The lungs", "The stomach", "The liver"], "The heart is a main organ of the cardiovascular system."]]}, {"id": "cv2", "t": "cardio", "name": "Main job: delivering oxygen", "note": "The main job of the cardiovascular system is delivering oxygen to every cell. It also moves nutrients, hormones, and wastes. Blood picks up oxygen in the lungs.", "qs": [["What is the MAIN function of the cardiovascular system?", "To deliver oxygen to each of your cells", ["To digest food", "To produce hormones", "To protect the body from injury"], "The main function of the cardiovascular system is to deliver oxygen to each of your cells."], ["What does the cardiovascular system move to and from your cells?", "Nutrients, gases like oxygen, hormones, and wastes", ["Only oxygen", "Only red blood cells", "Only food and water"], "It moves nutrients, gases, hormones, and wastes to and from your cells."], ["Where does blood pick up oxygen?", "In the lungs", ["In the heart", "In the kidneys", "In the stomach"], "Blood receives oxygen in the lungs and then the heart pumps it through the body."]]}, {"id": "cv3", "t": "cardio", "name": "Why cells need oxygen", "note": "Cells need oxygen for cellular respiration, which makes energy (ATP). Carbon dioxide is the waste; blood carries it to the lungs to be exhaled. Without oxygen, cells use lactic acid fermentation, but only for a short time.", "qs": [["Why does every cell in your body need oxygen?", "For cellular respiration, which produces energy (ATP)", ["To make new DNA", "To build a cell wall", "To make hormones"], "Oxygen is used in cellular respiration to produce energy in the form of ATP."], ["Carbon dioxide is a waste product of...", "Cellular respiration", ["Digestion", "Blood clotting", "Protein synthesis"], "Carbon dioxide is a waste product of cellular respiration. It moves into the blood and is exhaled from the lungs."], ["Without oxygen, your cells would do ___, which can only last a short time.", "Lactic acid fermentation", ["Cellular respiration", "Photosynthesis", "Protein synthesis"], "Without oxygen, lactic acid fermentation happens, but it can only be maintained briefly."]]}, {"id": "cv4", "t": "cardio", "name": "Arteries vs. veins", "note": "ARTERIES carry blood AWAY from the heart (memory trick: A = Away). VEINS return blood back TO the heart.", "qs": [["Fill in the blanks: ___ carry blood away from the heart and ___ return blood back to the heart.", "Arteries; veins", ["Veins; arteries", "Capillaries; arteries", "Veins; capillaries"], "Arteries carry blood away from the heart and veins return blood back to the heart."], ["A blood vessel that carries blood back TO the heart is a(n)...", "Vein", ["Artery", "Aorta", "Pulmonary artery"], "Veins return blood to the heart."], ["Memory trick: \"Arteries go Away.\" This means arteries carry blood...", "Away from the heart", ["Toward the heart", "Only to the lungs", "Only through the skin"], "Arteries carry blood away from the heart."]]}, {"id": "cv5", "t": "cardio", "name": "Controlling body temperature", "note": "Temperature control: when you get hot, the brain tells blood vessels in the skin to widen (increase in diameter). More blood and heat move near the skin's surface, and the heat is released. Moving warm blood around the body also keeps you warm.", "qs": [["When your body gets too hot, what do the blood vessels in your skin do?", "They increase in diameter (widen) so more heat is released at the skin", ["They shrink so less blood reaches the skin", "They stop blood flow completely", "They turn into capillaries"], "Wider blood vessels bring more blood and heat near the skin's surface, where the heat is released."], ["How does the cardiovascular system help keep you warm?", "By moving warm blood around your body", ["By making sweat", "By making the lungs work harder", "By storing heat in the bones"], "It helps keep you warm by moving warm blood around your body."], ["What senses that your body temperature is rising and sends messages to your blood vessels?", "Your brain", ["Your heart", "Your lungs", "Your stomach"], "When your brain senses your body temperature is increasing, it sends messages to blood vessels in the skin."]]}, {"id": "cv6", "t": "cardio", "name": "Hormones in the blood", "note": "Hormones = chemical messenger molecules made by organs of the endocrine system. Blood carries them from where they are made to where they act. Example: adrenaline (from the adrenal glands on top of the kidneys) quickens the heart rate.", "qs": [["What are hormones?", "Chemical messenger molecules made by the endocrine system", ["A type of blood cell", "Signals sent by nerve cells", "Small viruses in the blood"], "Hormones are chemical messenger molecules produced by organs of the endocrine system."], ["Where is adrenaline made?", "In the adrenal glands on top of the kidneys", ["In the heart", "In the lungs", "In the bone marrow"], "Adrenaline is produced by the adrenal glands, which sit on top of the kidneys."], ["Why do hormones need to travel through the blood?", "They are made in one part of the body but affect another part", ["They need to pick up oxygen", "Blood turns them into proteins", "They can only work inside the heart"], "Hormones are produced in one area and have an effect on another area, so they travel through the blood."]]}, {"id": "h1", "t": "heart", "name": "The four chambers", "note": "4 chambers: 2 ATRIA (top, small, thin-walled; RECEIVE blood) and 2 VENTRICLES (muscular, V-shaped; PUMP blood out of the heart).", "qs": [["What are the four chambers of the heart?", "Left and right atria, left and right ventricles", ["Two lungs and two valves", "Aorta, vena cava, and two ventricles", "Four atria"], "The heart has four chambers: the left and right atria and the left and right ventricles."], ["What is an atrium?", "A small, thin-walled chamber on top of the heart where blood first enters", ["A muscular V-shaped chamber that pumps blood out", "A valve between two chambers", "The largest artery in the body"], "An atrium is one of the two small, thin-walled chambers on top of the heart where blood first enters."], ["What are the ventricles?", "Muscular, V-shaped chambers that pump blood out of the heart", ["Thin-walled chambers that receive blood", "Valves that keep blood flowing one way", "Blood vessels that return blood to the heart"], "Ventricles are muscular V-shaped chambers that pump blood out of the heart. Think: V for ventricle."]]}, {"id": "h2", "t": "heart", "name": "The job of each chamber", "note": "Right atrium: receives oxygen-POOR blood from the body. Right ventricle: pumps it to the lungs. Left atrium: receives oxygen-RICH blood from the lungs. Left ventricle: pumps it out to the rest of the body.", "qs": [["Where does oxygen-poor blood from the body first enter the heart?", "The right atrium", ["The left atrium", "The right ventricle", "The left ventricle"], "The right atrium receives oxygen-poor blood from the body."], ["Which chamber pumps oxygen-rich blood out to the rest of the body?", "The left ventricle", ["The right ventricle", "The left atrium", "The right atrium"], "The left ventricle pumps oxygen-rich blood out of the heart to the rest of the body."], ["Which chamber pumps oxygen-poor blood toward the lungs?", "The right ventricle", ["The left ventricle", "The right atrium", "The left atrium"], "The right ventricle pumps oxygen-poor blood toward the lungs, where it receives oxygen."]]}, {"id": "h3", "t": "heart", "name": "Two loops: lungs and body", "note": "Blood flows through the heart in two loops. The RIGHT side sends oxygen-poor blood to the lungs (where it drops CO₂ and picks up O₂). The LEFT side sends oxygen-rich blood to the body. That's why the heart is like two pumps.", "qs": [["What does the right side of the heart do?", "Collects oxygen-poor blood from the body and pumps it to the lungs", ["Collects oxygen-rich blood and pumps it to the body", "Pumps blood only to the brain", "Makes new blood cells"], "The right side collects oxygen-poor blood from the body and pumps it into the lungs."], ["Why can the heart be thought of as two separate pumps?", "The right side pumps blood to the lungs and the left side pumps blood to the body", ["It has two valves", "Humans have two hearts", "The top and bottom beat at different speeds"], "Blood flows in two loops: a right side loop to the lungs and a left side loop to the body."], ["When blood reaches the lungs, what happens?", "It releases carbon dioxide and picks up oxygen", ["It releases oxygen and picks up carbon dioxide", "It picks up nutrients from food", "It gets new red blood cells"], "In the lungs, blood releases carbon dioxide and picks up oxygen."]]}, {"id": "h4", "t": "heart", "name": "How the heart pumps", "note": "Order: blood enters the atria → atria contract and push blood into the ventricles → ventricles fill → ventricles contract and push blood out of the heart. The heart is mainly cardiac muscle, whose cells contract together.", "qs": [["Which order shows how blood moves through the heart?", "Blood enters the atria → atria contract → ventricles fill → ventricles contract and push blood out", ["Blood enters the ventricles → ventricles contract → atria fill → atria push blood out", "Atria and ventricles all contract at the same moment", "Blood enters the valves → valves contract → blood enters the atria"], "Blood first enters the atria. When the atria contract, blood is pushed into the ventricles, which then contract and push blood out."], ["The heart is mainly made of what kind of tissue?", "Cardiac muscle", ["Skeletal muscle", "Epithelial tissue", "Bone"], "The heart is mainly composed of cardiac muscle, whose cells contract in unison."], ["What happens when the ventricles contract?", "Blood is pushed out of the heart", ["Blood flows into the atria", "The valves let blood flow backward", "The heart rests between beats"], "After the ventricles fill with blood, they contract and blood is pushed out of the heart."]]}, {"id": "h5", "t": "heart", "name": "Heart valves", "note": "4 valves keep blood flowing in ONE direction. The 2 AV (atrioventricular) valves stop blood from going from the ventricles back into the atria. The 2 SL (semilunar) valves are in the arteries leaving the heart and stop blood from flowing back into the ventricles.", "qs": [["What is the purpose of the valves in the heart?", "To keep blood flowing in one direction", ["To add oxygen to the blood", "To make new blood cells", "To slow down the heart rate"], "Valves open and close in one direction only, so blood only moves forward."], ["How many valves does the heart have?", "Four", ["Two", "One", "Six"], "There are four valves: two AV valves and two SL valves."], ["What do the two AV (atrioventricular) valves do?", "Stop blood from moving from the ventricles back into the atria", ["Stop blood from moving from the atria into the ventricles", "Stop blood from flowing from the arteries back into the ventricles", "Push blood into the lungs"], "The AV valves stop blood from moving from the ventricles to the atria. The SL valves, in the arteries leaving the heart, stop backflow into the ventricles."]]}, {"id": "h6", "t": "heart", "name": "Lub-dub and where the heart is", "note": "\"Lub\" = the AV valves closing. \"Dub\" = the SL valves closing. The heart sits closer to the CENTER of the chest, not far to the left.", "qs": [["What causes the \"lub\" sound of a heartbeat?", "The AV valves closing", ["The SL valves closing", "The ventricles filling with blood", "The atria opening"], "\"Lub\" is caused by the AV valves closing after blood passes through them."], ["What causes the \"dub\" sound of a heartbeat?", "The SL (semilunar) valves closing", ["The AV valves closing", "The atria contracting", "Blood entering the lungs"], "\"Dub\" is caused by the SL valves closing."], ["Where is your heart located?", "Closer to the center of the chest", ["Far on the left side of the chest", "On the right side, under the ribs", "Just below the stomach"], "Most people put their hand on the left, but the heart is closer to the center of the chest."]]}, {"id": "bv1", "t": "vessels", "name": "Pulmonary arteries and veins", "note": "Pulmonary ARTERIES: heart → lungs, carry oxygen-POOR blood (the only arteries that do). Pulmonary VEINS: lungs → heart, carry oxygen-RICH blood (the only veins that do).", "qs": [["Which are the only arteries that carry oxygen-poor blood?", "The pulmonary arteries", ["The aorta", "The arteries in the neck", "The vena cava"], "The pulmonary arteries carry oxygen-poor blood from the heart to the lungs. They are the only arteries that do."], ["Where do the pulmonary arteries carry blood?", "From the heart to the lungs", ["From the heart to the body", "From the lungs to the heart", "From the head to the heart"], "The pulmonary arteries carry oxygen-poor blood away from the heart to the lungs."], ["The pulmonary veins are the only veins that carry...", "Oxygen-rich blood", ["Oxygen-poor blood", "No blood at all", "Only hormones"], "The pulmonary veins return oxygen-rich blood from the lungs to the heart."]]}, {"id": "bv2", "t": "vessels", "name": "The aorta", "note": "Aorta = the largest artery in the body. It carries oxygen-rich blood from the left ventricle to the body.", "qs": [["What is the largest artery in the body?", "The aorta", ["The pulmonary artery", "The superior vena cava", "A capillary"], "The aorta is the largest artery in the body."], ["Oxygen-rich blood leaves the left ventricle through the...", "Aorta", ["Pulmonary artery", "Superior vena cava", "Pulmonary vein"], "Oxygen-rich blood leaves the left ventricle through the aorta."], ["What kind of blood does the aorta carry, and in which direction?", "Oxygen-rich blood, away from the heart", ["Oxygen-poor blood, toward the lungs", "Oxygen-poor blood, back to the heart", "Oxygen-rich blood, from the lungs to the heart"], "The aorta carries oxygen-rich blood away from the heart."]]}, {"id": "bv3", "t": "vessels", "name": "Capillaries", "note": "Capillaries = the smallest blood vessels. They connect very small arteries and veins. Gases, food, and other substances pass between blood and cells through their very thin walls.", "qs": [["What is the smallest type of blood vessel?", "Capillaries", ["Arteries", "Veins", "The aorta"], "Capillaries are the smallest type of blood vessel."], ["Where are gases exchanged between the blood and the body's cells?", "Across the thin walls of the capillaries", ["Inside the aorta", "Inside the heart's chambers", "Inside the vena cava"], "Gases and other substances are exchanged across the very thin walls of capillaries."], ["What do capillaries connect?", "Very small arteries and veins", ["The heart and lungs directly", "The two atria", "The aorta and the vena cava directly"], "Capillaries connect very small arteries and veins."]]}, {"id": "bv4", "t": "vessels", "name": "The venae cavae", "note": "The superior vena cava returns oxygen-poor blood from the HEAD. The inferior vena cava returns oxygen-poor blood from the BODY. Both bring it back to the heart.", "qs": [["Which veins return oxygen-poor blood to the heart?", "The superior and inferior vena cava", ["The pulmonary veins", "The aorta", "The pulmonary arteries"], "The superior vena cava and the inferior vena cava return oxygen-poor blood to the heart."], ["The superior vena cava returns blood from the...", "Head", ["Lower body", "Lungs", "Left ventricle"], "The superior vena cava returns blood from the head."], ["The inferior vena cava returns blood from the...", "Body", ["Head", "Lungs", "Brain"], "The inferior vena cava returns blood from the body."]]}, {"id": "bv5", "t": "vessels", "name": "Pulmonary circulation", "note": "Pulmonary circulation = heart ↔ lungs. Right ventricle → pulmonary arteries → lungs (release CO₂, pick up O₂) → pulmonary veins → left side of the heart.", "qs": [["Pulmonary circulation carries blood between the heart and the...", "Lungs", ["Body", "Brain", "Kidneys"], "Pulmonary circulation carries blood between the heart and lungs."], ["Which path is pulmonary circulation?", "Right ventricle → pulmonary arteries → lungs → pulmonary veins → left side of heart", ["Left ventricle → aorta → body → vena cava → right side of heart", "Right atrium → aorta → lungs → vena cava", "Lungs → pulmonary arteries → right ventricle → aorta"], "Oxygen-poor blood leaves the right ventricle through the pulmonary arteries, picks up oxygen in the lungs, and returns through the pulmonary veins to the left side."], ["Which side of the heart pumps blood into pulmonary circulation?", "The right side, which pumps oxygen-poor blood", ["The left side, which pumps oxygen-rich blood", "Both sides equally", "Neither side"], "The right side of the heart pumps deoxygenated (oxygen-poor) blood into pulmonary circulation."]]}, {"id": "bv6", "t": "vessels", "name": "Systemic circulation", "note": "Systemic circulation = heart ↔ body. Left ventricle → aorta → organs and tissues (oxygen absorbed through capillaries) → small veins → bigger veins → venae cavae → heart. The neck arteries bring oxygen-rich blood to the brain.", "qs": [["Systemic circulation carries blood between the heart and the...", "Body", ["Lungs only", "Liver only", "Lungs and trachea"], "Systemic circulation carries blood between the heart and body."], ["Which path is systemic circulation?", "Left ventricle → aorta → body tissues → veins → venae cavae → heart", ["Right ventricle → pulmonary arteries → lungs → pulmonary veins", "Vena cava → aorta → lungs → left atrium", "Lungs → aorta → right atrium → pulmonary veins"], "Oxygen-rich blood leaves the left ventricle through the aorta, travels to the body, and returns through veins to the venae cavae."], ["Why are the major arteries in the neck so important?", "They carry oxygen-rich blood to the brain, which can't survive more than a few minutes without oxygen", ["They carry wastes from the brain to the kidneys", "They carry oxygen-poor blood to the lungs", "They make new blood cells for the head"], "The heart pumps oxygen-rich blood through these arteries to the brain."]]}, {"id": "bp1", "t": "bp", "name": "What blood pressure is", "note": "Blood pressure = the pressure circulating blood puts on the walls of blood vessels, caused mainly by the heartbeat. It is highest in arteries and drops as blood moves into smaller vessels; blood in veins is under little pressure.", "qs": [["What is blood pressure?", "The pressure circulating blood puts on the walls of blood vessels", ["How fast the heart beats", "How much blood is in the body", "How much oxygen is in the blood"], "Blood pressure occurs when circulating blood puts pressure on the walls of blood vessels."], ["What mainly causes blood pressure?", "The beating of the heart", ["Breathing", "Digesting food", "Moving your muscles"], "Blood pressure is primarily caused by the beating of your heart."], ["In which blood vessels is blood under the greatest pressure?", "Arteries", ["Veins", "Capillaries", "The vena cava"], "Blood in arteries is under the greatest pressure. Blood in veins is not under much pressure."]]}, {"id": "bp2", "t": "bp", "name": "Systolic and diastolic", "note": "Blood pressure is written systolic/diastolic. Systolic (first number) = when the heart beats, the highest pressure. Diastolic (second number) = when the heart rests between beats, the lowest. 120/80 is said \"one twenty over eighty.\"", "qs": [["What is systolic pressure?", "The pressure on blood vessels when the heart beats (the highest pressure)", ["The pressure when the heart rests between beats", "The number of beats per minute", "The pressure inside the lungs"], "Systolic pressure is the first number: the pressure when the heart beats."], ["In a reading of 120/80, what does the 80 stand for?", "Diastolic pressure, when the heart rests between beats", ["Systolic pressure, when the heart beats", "Heart beats per minute", "The patient's age"], "The second number is the diastolic pressure, when blood pressure is lowest."], ["How is blood pressure written?", "Systolic/diastolic", ["Diastolic/systolic", "Heart rate/systolic", "Systolic × diastolic"], "Blood pressure is written as systolic over diastolic, such as 120/80."]]}, {"id": "bp3", "t": "bp", "name": "Healthy blood pressure", "note": "Healthy blood pressure: systolic less than 120 and diastolic less than 80. People at the low end of the range (systolic around 115) have better long-term heart health.", "qs": [["What is a healthy range for blood pressure?", "Systolic less than 120 and diastolic less than 80", ["Systolic less than 140 and diastolic less than 90", "Systolic more than 120 and diastolic more than 80", "Exactly 100/60"], "Healthy ranges are systolic less than 120 and diastolic less than 80."], ["Which reading is in the healthy range?", "112/74", ["126/82", "142/92", "150/100"], "112 is less than 120 and 74 is less than 80, so 112/74 is healthy."], ["Studies show that people whose systolic pressure is around ___ instead of 120 have fewer health problems.", "115", ["140", "160", "90"], "People whose systolic pressure is around 115, rather than 120, have fewer health problems."]]}, {"id": "bp4", "t": "bp", "name": "Measuring blood pressure", "note": "Blood pressure is measured with a sphygmomanometer (an inflatable cuff plus a pressure meter). It changes with each heartbeat and during the day, with exercise, emotions, sleep, stress, nutrition, drugs, and disease.", "qs": [["What device measures blood pressure?", "A sphygmomanometer", ["A stethoscope", "A thermometer", "A microscope"], "Blood pressure is measured with a sphygmomanometer."], ["A digital sphygmomanometer is made of...", "An inflatable cuff and a pressure meter", ["A needle and a test tube", "A light and a lens", "A microphone and a speaker"], "A digital sphygmomanometer has an inflatable cuff and a pressure meter."], ["Which of these can change your blood pressure during the day?", "Exercise, emotions, sleep, and stress", ["Nothing; it stays the same all day", "Only your age", "Only your height"], "Pressure varies with exercise, emotions, sleep, stress, nutrition, drugs, or disease."]]}, {"id": "bp5", "t": "bp", "name": "Hypertension, the \"silent killer\"", "note": "Hypertension (high blood pressure) = systolic always 140 or higher and/or diastolic always 90 or higher. It's called the \"silent killer\" because it often has no symptoms. It raises the risk of heart disease and stroke.", "qs": [["When is a person said to have hypertension?", "When systolic pressure is always 140 or higher and/or diastolic is always 90 or higher", ["When pressure is ever above 120/80, even once", "When systolic is below 90", "When the heart beats more than 100 times a minute"], "Hypertension is present when systolic is always 140 or higher, and/or diastolic is always 90 or higher."], ["Why is hypertension often called the \"silent killer\"?", "It often has no symptoms, so people may not know they have it", ["It makes the heart beat quietly", "It only happens while people sleep", "It causes people to lose their voice"], "Hypertension often has no symptoms, so a person may not know they have high blood pressure."], ["Having hypertension increases a person's chance of...", "Heart disease and stroke", ["Catching the common cold", "Breaking a bone", "Getting a virus"], "Hypertension increases the chance of heart disease, stroke, and other serious cardiovascular diseases."]]}, {"id": "bp6", "t": "bp", "name": "Lowering the risk of high blood pressure", "note": "Treatments: diet changes, exercise, medication. Lower your risk: get enough exercise, limit sodium (salt), avoid being overweight, don't smoke, don't drink alcohol to excess. Genetics can't be changed. Foods thought to help: skim milk, spinach, beans, bananas, dark chocolate.", "qs": [["Which lifestyle change can lower the risk of high blood pressure?", "Limiting sodium (salt) in your diet", ["Eating more salt", "Smoking", "Exercising less"], "Lifestyle changes include exercise, limiting sodium, not being overweight, limiting alcohol, and not smoking."], ["Which food is thought to help lower blood pressure?", "Spinach", ["Salted potato chips", "Pretzels with extra salt", "Salty canned soup"], "Foods thought to lower blood pressure include skim milk, spinach, beans, bananas, and dark chocolate."], ["Which risk factor for high blood pressure can a person NOT change?", "Their genetic background", ["How much they exercise", "How much salt they eat", "Whether they smoke"], "A person cannot change their genetic background, so lifestyle changes matter."]]}, {"id": "bp7", "t": "bp", "name": "Low blood pressure", "note": "Low blood pressure is usually not a concern unless it causes problems. Symptoms: dizziness or lightheadedness, fainting, dehydration and unusual thirst, trouble concentrating, blurred vision, nausea, fatigue.", "qs": [["Is low blood pressure usually a concern?", "No, as long as it doesn't cause any problems", ["Yes, it is always an emergency", "Yes, it is the same as hypertension", "No, because blood pressure can never be too low"], "Low blood pressure is not usually a concern, as long as there are no problems associated with it."], ["Which is a symptom of low blood pressure?", "Dizziness or fainting", ["A rash", "A broken bone", "A runny nose"], "Symptoms include dizziness or lightheadedness, fainting, blurred vision, nausea, and fatigue."], ["Which list shows only symptoms of low blood pressure?", "Dizziness, blurred vision, nausea, fatigue", ["Dizziness, cold sores, rash, cough", "Fever, sneezing, runny nose, cough", "No symptoms at all, ever"], "Low blood pressure symptoms include dizziness, fainting, dehydration, unusual thirst, lack of concentration, blurred vision, nausea, and fatigue."]]}]};
+(function(){
+"use strict";
+const KEY = "practice-quiz:" + QUIZ.title;
+const TOP = Object.fromEntries(QUIZ.topics.map(t=>[t.id,t]));
+const CON = Object.fromEntries(QUIZ.concepts.map(c=>[c.id,c]));
+const LETTERS = "ABCD";
+document.title = QUIZ.title + " · Practice Quiz";
+
+let S = load() || {history:[], lastVariant:{}, round:null, view:"home", filter:"all", mastery:false};
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+const $ = (s,r=document)=>r.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+const pct = (a,b)=> b? Math.round(100*a/b) : 0;
+
+function variantFor(cid, fresh){
+  const c = CON[cid], n = c.qs.length;
+  if(!fresh) return 0;
+  const last = S.lastVariant[cid];
+  return last==null ? 0 : (last+1)%n;
+}
+function makeItem(cid, vi){ return {cid, vi, order: shuffle([0,1,2,3])}; }
+
+function newRound(kind, items, label){
+  items.forEach(it=>{ S.lastVariant[it.cid]=it.vi; });
+  const num = S.history.length + 1;
+  S.round = {kind, label, num, items, answers:{}, pos:0, submitted:false, started:Date.now()};
+  S.view = "quiz"; S.filter="all";
+  save(); render(); window.scrollTo(0,0);
+}
+function startFull(fresh, cids){
+  cids = cids || QUIZ.concepts.map(c=>c.id);
+  const first = !S.history.length && !fresh;
+  const items = cids.map(cid=> makeItem(cid, first ? 0 : variantFor(cid, true)));
+  newRound(cids.length===QUIZ.concepts.length ? "full" : "subset", items,
+    cids.length===QUIZ.concepts.length ? (first ? "Full test" : "Full test · new questions") : "Chosen lessons · new questions");
+}
+
+/* Fresh start: wipe history, pick a random version of every question
+   (different from the last one he saw), and begin a full test. */
+function startOver(){
+  const items = QUIZ.concepts.map(c=>{
+    const n=c.qs.length, last=S.lastVariant[c.id];
+    let vi=Math.floor(Math.random()*n);
+    if(n>1 && vi===last) vi=(vi+1+Math.floor(Math.random()*(n-1)))%n;
+    return makeItem(c.id, vi);
+  });
+  S.history=[]; S.lastVariant={};
+  newRound("full", items, "Fresh start");
+}
+
+/* ---------- views ---------- */
+function render(){
+  const app = $("#app");
+  if(S.view==="quiz" && S.round && !S.round.submitted) app.innerHTML = viewQuiz();
+  else if(S.view==="results" && S.round && S.round.submitted) app.innerHTML = viewResults();
+  else { S.view="home"; app.innerHTML = viewHome(); }
+  bind();
+}
+
+function header(){
+  return `<header class="spread"><div><div class="eyebrow">${esc(QUIZ.subtitle)}</div><h1>${esc(QUIZ.title)}</h1></div></header>`;
+}
+function lessonsList(withCounts){
+  return `<ul class="lesson-list">${QUIZ.topics.map(t=>{
+    const n = QUIZ.concepts.filter(c=>c.t===t.id).length;
+    return `<li><a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a>${withCounts?`<span class="count">${n} Q</span>`:""}</li>`;}).join("")}</ul>`;
+}
+function historyTable(){
+  if(!S.history.length) return "";
+  return `<section class="sheet"><h2>Attempt history</h2><div style="overflow-x:auto;margin-top:10px"><table class="hist"><thead><tr><th>#</th><th>Round</th><th>Score</th><th>When</th></tr></thead><tbody>${
+    S.history.slice().reverse().map(h=>`<tr><td>${h.num}</td><td>${esc(h.label)}</td><td><b>${h.right}/${h.total}</b> · ${pct(h.right,h.total)}%</td><td class="muted">${new Date(h.when).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}</td></tr>`).join("")
+  }</tbody></table></div></section>`;
+}
+function viewHome(){
+  const total = QUIZ.concepts.length;
+  const r = S.round, resumable = r && !r.submitted;
+  return `${header()}
+  ${resumable?`<div class="banner spread"><div><b>Quiz in progress:</b> ${esc(r.label)}, ${Object.keys(r.answers).length} of ${r.items.length} answered.</div><button class="btn small" data-act="resume">Keep going</button></div>`:""}
+  <section class="sheet" style="display:flex;flex-direction:column;gap:16px">
+    <p style="margin:0">${total} multiple-choice questions, one for every concept in these ${QUIZ.topics.length} lessons. It's open book: each question tells you which lesson to look in, and the lesson name is a link.</p>
+    ${lessonsList(true)}
+    <div class="row">
+      <button class="btn" data-act="start">${S.history.length?"Start a new full test":"Start the test"}</button>
+      <button class="btn ghost" data-act="choose">Choose lessons</button>
+      <button class="btn ghost" data-act="printall">Print study notes</button>
+      ${S.history.length?`<button class="btn ghost" data-act="scratchask">Start over from scratch</button>`:""}
+    </div>
+    <div id="scratchconfirm" hidden class="notice"><span>This clears all scores and history and starts a brand-new full test.</span><button class="btn small" data-act="scratch">Yes, start over</button><button class="btn small ghost" data-act="scratchno">Cancel</button></div>
+    <div id="chooser" hidden>${subsetPicker(null)}<div class="row" style="margin-top:10px"><button class="btn small" data-act="startsubset">Start with these lessons</button></div></div>
+    <p class="muted" style="margin:0;font-size:15px">Tip: press <kbd>A</kbd>–<kbd>D</kbd> to answer and <kbd>←</kbd> <kbd>→</kbd> to move between questions. Your progress is saved in this browser if you close the page.</p>
+  </section>
+  ${historyTable()}`;
+}
+
+function viewQuiz(){
+  const r = S.round, it = r.items[r.pos], c = CON[it.cid], q = c.qs[it.vi], t = TOP[c.t];
+  const choices = [q[1], ...q[2]];
+  const answered = Object.keys(r.answers).length, sel = r.answers[r.pos];
+  const unanswered = r.items.length - answered;
+  return `${header()}
+  <section class="sheet">
+    <div class="spread"><b>${esc(r.label)}</b><span class="count">Question ${r.pos+1} of ${r.items.length} · ${answered} answered</span></div>
+    <div class="progress" style="margin-top:10px"><i style="width:${pct(answered,r.items.length)}%"></i></div>
+  </section>
+  <section class="sheet">
+    <div class="qtopic"><span class="muted">Look in:</span><a class="chip" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a></div>
+    <div class="qtext" id="qtext">${esc(q[0])}</div>
+    <div class="choices" role="radiogroup" aria-labelledby="qtext">
+      ${it.order.map((ci,k)=>`<button class="choice${sel===ci?" sel":""}" role="radio" aria-checked="${sel===ci}" data-choice="${ci}"><span class="letter">${LETTERS[k]}</span><span>${esc(choices[ci])}</span></button>`).join("")}
+    </div>
+    <div class="qnav">
+      <button class="btn ghost" data-act="prev" ${r.pos===0?"disabled":""}>← Back</button>
+      ${r.pos<r.items.length-1?`<button class="btn" data-act="next">Next →</button>`:`<button class="btn" data-act="submit">Finish &amp; see results</button>`}
+    </div>
+  </section>
+  <section class="sheet">
+    <div class="spread"><h3>All questions</h3><button class="btn small ghost" data-act="submit">Finish now</button></div>
+    <div id="confirm"></div>
+    <div class="map" style="margin-top:12px">${r.items.map((x,i)=>`<button data-go="${i}" class="${r.answers[i]!=null?"done":""} ${i===r.pos?"cur":""}" aria-label="Question ${i+1}${r.answers[i]!=null?", answered":""}">${i+1}</button>`).join("")}</div>
+    <div class="row" style="margin-top:14px"><button class="btn small ghost" data-act="home">Save &amp; exit</button>${unanswered?`<span class="muted" style="font-size:15px">${unanswered} still blank</span>`:""}</div>
+  </section>`;
+}
+
+function grade(r){
+  return r.items.map((it,i)=>({i, it, c:CON[it.cid], q:CON[it.cid].qs[it.vi], chosen:r.answers[i], ok:r.answers[i]===0}));
+}
+function byTopic(g){
+  const m = {};
+  g.forEach(x=>{ const t=x.c.t; (m[t] ||= {right:0,total:0}); m[t].total++; if(x.ok) m[t].right++; });
+  return QUIZ.topics.filter(t=>m[t.id]).map(t=>({t, ...m[t.id], p:pct(m[t.id].right,m[t.id].total)}));
+}
+function subsetPicker(topicStats){
+  const stat = topicStats ? Object.fromEntries(topicStats.map(s=>[s.t.id,s])) : {};
+  return `<div class="subset" id="subset">${QUIZ.topics.map(t=>{
+    const s = stat[t.id], low = s && s.p<80, n = QUIZ.concepts.filter(c=>c.t===t.id).length;
+    const checked = topicStats ? low : true;
+    return `<label><input type="checkbox" name="topic" value="${t.id}" ${checked?"checked":""}> ${esc(t.name)} <span class="count">(${n})</span>${low?` <span class="low">${s.p}%</span>`:""}</label>`;}).join("")}</div>`;
+}
+
+function viewResults(){
+  const r = S.round, g = grade(r), right = g.filter(x=>x.ok).length, wrong = g.length-right;
+  const topics = byTopic(g);
+  const shown = g.filter(x=> S.filter==="all" || (S.filter==="wrong" ? !x.ok : x.ok));
+  const mastery = r.kind==="mastery";
+  const defNext = wrong ? (mastery ? "mastery" : "missed") : "fresh";
+  const barColor = p=> p>=80 ? "var(--ok)" : p>=60 ? "var(--warn)" : "var(--bad)";
+  return `${header()}
+  ${mastery ? (wrong
+     ? `<div class="banner"><b>Mastery mode:</b> ${wrong} concept${wrong>1?"s":""} still to master. The next round asks them again with different wording.</div>`
+     : `<div class="banner win"><b>Mastered!</b> Every concept in this mastery run has now been answered correctly.</div>`) : ""}
+  <section class="sheet">
+    <div class="eyebrow">Round ${r.num} · ${esc(r.label)}</div>
+    <div class="score" style="margin-top:10px">
+      <div class="big">${right}<small> / ${g.length}</small></div>
+      <div><div style="font:700 24px/1 var(--display)">${pct(right,g.length)}%</div><div class="muted">${right} right · ${wrong} to fix</div></div>
+      <div style="margin-left:auto"><a href="#next" class="btn small ghost" style="text-decoration:none;display:inline-block">Jump to next steps ↓</a></div>
+    </div>
+    ${topics.length>1?`<div class="topics">${topics.map(s=>`<div class="trow"><span>${esc(s.t.name)}</span><span class="bar"><i style="width:${s.p}%;background:${barColor(s.p)}"></i></span><span class="pct">${s.right}/${s.total}</span></div>`).join("")}</div>`:""}
+  </section>
+
+  <section class="sheet">
+    <div class="spread"><h2>What was right and wrong</h2>
+      <div class="tabs" role="tablist">
+        <button data-filter="all" class="${S.filter==="all"?"on":""}">All (${g.length})</button>
+        <button data-filter="wrong" class="${S.filter==="wrong"?"on":""}">Wrong (${wrong})</button>
+        <button data-filter="right" class="${S.filter==="right"?"on":""}">Right (${right})</button>
+      </div></div>
+    <div class="review">${shown.length? shown.map(x=>{
+      const choices=[x.q[1],...x.q[2]], t=TOP[x.c.t];
+      return `<article class="ritem${x.ok?"":" wrong"}">
+        <div class="row" style="gap:8px"><span class="${x.ok?"tag-ok":"tag-bad"}">${x.ok?"✓ Right":"✗ Wrong"}</span><span class="count">Q${x.i+1}</span><a class="chip" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a></div>
+        <div class="rq">${esc(x.q[0])}</div>
+        <div class="ans">${x.ok?`<div>Answer: <b>${esc(choices[0])}</b></div>`:
+          `<div>Your answer: <span class="tag-bad">${x.chosen==null?"(left blank)":esc(choices[x.chosen])}</span></div><div>Correct answer: <b class="tag-ok">${esc(choices[0])}</b></div>`}</div>
+        <div class="why">${esc(x.q[3])}</div></article>`;}).join("") : `<p class="muted">Nothing here.</p>`}</div>
+  </section>
+
+  <section class="sheet next" id="next">
+    <h2 style="margin-bottom:14px">Next steps</h2>
+    <form id="nextform" style="display:flex;flex-direction:column;gap:18px">
+      <fieldset><legend>Also do</legend>
+        <label class="opt${wrong?"":" dis"}"><input type="checkbox" id="o-print" ${wrong?"":"disabled"}><div><b>Print notebook sheet</b><span>Each missed question with the correct answer, a notebook note to copy, and the lesson to find it in.</span></div></label>
+        <label class="opt"><input type="checkbox" id="o-shuffle" checked><div><b>Shuffle answer order</b><span>For repeated questions, so the right answer isn't in the same spot (stops "it was C" memorizing).</span></div></label>
+      </fieldset>
+      <fieldset><legend>Next round (pick one)</legend>
+        ${radio("missed","Retake the questions I missed",`The same ${wrong} question${wrong===1?"":"s"}.`, !wrong, defNext)}
+        ${radio("mastery","Keep going until mastered",`The ${wrong} missed concept${wrong===1?"":"s"} with new wording each round, repeating until every one is right.`, !wrong, defNext)}
+        ${radio("same","Retake this same test",`All ${g.length} questions again, exactly as they were.`, false, defNext)}
+        ${radio("fresh","New questions on every concept",`A fresh set of ${QUIZ.concepts.length} questions on all the same concepts.`, false, defNext)}
+        ${radio("subset","New questions on lessons I choose","Lessons scored under 80% are pre-checked.", false, defNext)}
+        <div id="subsetwrap" hidden>${subsetPicker(topics)}</div>
+        ${radio("scratch","Start over from scratch","A brand-new full test with different wording that ignores past results. Clears the score history, as if he'd never taken it.", false, defNext)}
+        ${radio("none","No new round right now","Go back to the start page.", false, defNext)}
+      </fieldset>
+      <div class="row"><button class="btn" type="submit" id="go">Start</button><button class="btn ghost" type="button" data-act="copy">Copy missed questions as text</button><span id="copymsg" class="muted" style="font-size:15px"></span></div>
+    </form>
+  </section>
+  ${historyTable()}`;
+}
+function radio(v,title,sub,dis,def){
+  return `<label class="opt${dis?" dis":""}"><input type="radio" name="next" value="${v}" ${dis?"disabled":""} ${v===def?"checked":""}><div><b>${title}</b><span>${sub}</span></div></label>`;
+}
+
+/* ---------- actions ---------- */
+function answer(ci){ const r=S.round; r.answers[r.pos]=ci; save(); render(); }
+function go(i){ const r=S.round; r.pos=Math.max(0,Math.min(r.items.length-1,i)); save(); render(); }
+function trySubmit(force){
+  const r=S.round, blank=r.items.length-Object.keys(r.answers).length;
+  if(blank && !force){
+    $("#confirm").innerHTML = `<div class="notice" style="margin-top:12px"><span>${blank} question${blank>1?"s are":" is"} still blank and will count as wrong.</span><button class="btn small" data-act="forcesubmit">Finish anyway</button><button class="btn small ghost" data-act="firstblank">Go to first blank</button></div>`;
+    bind(); $("#confirm").scrollIntoView({block:"nearest"}); return;
+  }
+  r.submitted=true;
+  const g=grade(r);
+  S.history.push({num:r.num,label:r.label,right:g.filter(x=>x.ok).length,total:g.length,when:Date.now()});
+  if(S.history.length>40) S.history=S.history.slice(-40);
+  S.view="results"; save(); render(); window.scrollTo(0,0);
+}
+
+function printSheet(items, title){
+  const today = new Date().toLocaleDateString([], {month:"long",day:"numeric",year:"numeric"});
+  $("#print").innerHTML = `<div class="p-head"><h1>${esc(title)}</h1><div>${esc(QUIZ.title)} · ${today}</div></div>` +
+    items.map((x,n)=>{ const t=TOP[x.c.t];
+      return `<div class="p-item">
+        <div class="pq">${n+1}. ${esc(x.q?x.q[0]:x.c.name)}</div>
+        ${x.q?`<div><span class="p-lbl">Answer:</span> ${esc(x.q[1])}</div>`:""}
+        <div><span class="p-lbl">Notebook:</span> ${esc(x.c.note)}</div>
+        <div><span class="p-lbl">Find it in:</span> ${esc(t.name)}</div></div>`; }).join("");
+  setTimeout(()=>window.print(), 50);
+}
+function missedText(){
+  const g=grade(S.round).filter(x=>!x.ok);
+  return g.map((x,n)=>`${n+1}. ${x.q[0]}\n   Answer: ${x.q[1]}\n   Notebook: ${x.c.note}\n   Find it in: ${TOP[x.c.t].name}`).join("\n\n");
+}
+
+function doNext(e){
+  e.preventDefault();
+  const r=S.round, g=grade(r), missed=g.filter(x=>!x.ok);
+  const doPrint=$("#o-print")?.checked, shuf=$("#o-shuffle").checked;
+  const choice=(new FormData($("#nextform"))).get("next");
+  if(doPrint && missed.length) printSheet(missed, `Notebook log · Round ${r.num} (${g.length-missed.length}/${g.length})`);
+  const reorder = it => ({cid:it.cid, vi:it.vi, order: shuf ? shuffle([0,1,2,3]) : it.order.slice()});
+  const after = ()=>{
+    if(choice==="missed") newRound("missed", missed.map(x=>reorder(x.it)), "Missed questions");
+    else if(choice==="mastery") newRound("mastery", missed.map(x=>makeItem(x.it.cid, variantFor(x.it.cid,true))), "Mastery round");
+    else if(choice==="same") newRound(r.kind==="mastery"?"same":r.kind, r.items.map(reorder), r.label.replace(/ \(retake\)$/,"")+" (retake)");
+    else if(choice==="fresh") startFull(true);
+    else if(choice==="subset"){
+      const ids=[...document.querySelectorAll('#subset input[name=topic]:checked')].map(i=>i.value);
+      if(!ids.length){ $("#copymsg").textContent="Pick at least one lesson."; return; }
+      startFull(true, QUIZ.concepts.filter(c=>ids.includes(c.t)).map(c=>c.id));
+    } else if(choice==="scratch") startOver();
+    else { S.view="home"; save(); render(); window.scrollTo(0,0); }
+  };
+  // let the print dialog open on the results page before switching views
+  if(doPrint && missed.length) setTimeout(after, 400); else after();
+}
+
+function bind(){
+  document.querySelectorAll("[data-choice]").forEach(b=>b.onclick=()=>answer(+b.dataset.choice));
+  document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(+b.dataset.go));
+  document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{S.filter=b.dataset.filter;save();render();});
+  document.querySelectorAll("[data-act]").forEach(b=>b.onclick=ev=>{
+    const a=b.dataset.act;
+    if(a==="start") startFull(S.history.length>0);
+    if(a==="choose"){ $("#chooser").hidden=!$("#chooser").hidden; }
+    if(a==="scratchask"){ $("#scratchconfirm").hidden=false; }
+    if(a==="scratchno"){ $("#scratchconfirm").hidden=true; }
+    if(a==="scratch") startOver();
+    if(a==="startsubset"){
+      const ids=[...document.querySelectorAll('#subset input[name=topic]:checked')].map(i=>i.value);
+      if(ids.length) startFull(S.history.length>0, QUIZ.concepts.filter(c=>ids.includes(c.t)).map(c=>c.id));
+    }
+    if(a==="printall") printSheet(QUIZ.concepts.map(c=>({c})), "Study notes · every concept");
+    if(a==="resume"){ S.view="quiz"; save(); render(); }
+    if(a==="prev") go(S.round.pos-1);
+    if(a==="next") go(S.round.pos+1);
+    if(a==="submit") trySubmit(false);
+    if(a==="forcesubmit") trySubmit(true);
+    if(a==="firstblank"){ const r=S.round; const i=r.items.findIndex((x,k)=>r.answers[k]==null); go(i); }
+    if(a==="home"){ S.view="home"; save(); render(); }
+    if(a==="copy"){
+      const txt=missedText()||"Nothing missed!";
+      const done=m=>{$("#copymsg").textContent=m;};
+      (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>done("Copied."),()=>done("Couldn't copy here."));
+    }
+  });
+  const f=$("#nextform");
+  if(f){
+    f.onsubmit=doNext;
+    const sync=()=>{
+      const v=(new FormData(f)).get("next");
+      $("#subsetwrap").hidden = v!=="subset";
+      const p=$("#o-print")?.checked;
+      const labels={missed:"Start missed questions",mastery:"Start mastery round",same:"Start retake",fresh:"Start new test",subset:"Start chosen lessons",scratch:"Start over",none:"Done"};
+      $("#go").textContent = (p ? (v==="none"?"Print":"Print & ") : "") + (p&&v==="none" ? "" : (p?labels[v].toLowerCase():labels[v]));
+    };
+    f.onchange=sync; sync();
+  }
+}
+document.addEventListener("keydown",e=>{
+  if(S.view!=="quiz"||!S.round||S.round.submitted) return;
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  const k=e.key.toUpperCase(), it=S.round.items[S.round.pos];
+  const idx = "ABCD".indexOf(k)>=0 ? "ABCD".indexOf(k) : "1234".indexOf(k);
+  if(idx>=0){ answer(it.order[idx]); }
+  else if(e.key==="ArrowRight") go(S.round.pos+1);
+  else if(e.key==="ArrowLeft") go(S.round.pos-1);
+});
+render();
+})();
+</script>
+</body>
+</html>
